@@ -48,10 +48,13 @@ namespace SharpSword
                             {
                                 XmlDocument xmldoc = new XmlDocument();
                                 xmldoc.Load(stream);
-                                string plaintext = xmldoc.DocumentElement.InnerText;
+                                XmlNodeList plaintext = xmldoc.GetElementsByTagName("w:t");
                                 DateTime date = DateTime.Now;
                                 Console.WriteLine("\n" + date + ": " + "Reading Document: " + docPath + "\n\n");
-                                Console.WriteLine(plaintext);
+                                for (int i=0; i < plaintext.Count; i++)
+                                {
+                                    Console.WriteLine(plaintext[i].InnerText);
+                                }
                                 System.Environment.Exit(0);
                             }
                         }
