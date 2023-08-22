@@ -11,4 +11,4 @@ Examples:
 
    - SharpSword.exe test.docx : read the contents of a word doc
    - SharpSword.exe test.docx -checkPassword : checks if the document is password protected
-   - SharpSword.exe test.docx -password <somepassword> : decrypts the password protected document and reads contents in memory
+   - SharpSword.exe test.docx -password \<somepassword\> : decrypts the password protected document and reads contents in memory
