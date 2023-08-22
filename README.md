@@ -5,7 +5,7 @@ Description:
    - Read Contents of Word Documents using MS Office Interop (Standalone or with CobaltStrike Execute Assembly)
 
 Usage: 
-   - SharpSword.exe C:\\Some\\Path\\To\\Document.(doc/docm/docx/etc...) [-checkPassword] -[password <password>]
+   - SharpSword.exe C:\\Some\\Path\\To\\Document.(doc/docm/docx/etc...) [-checkPassword] -[password \<password\>]
 
 Examples:
 
