@@ -1,4 +1,4 @@
-﻿using Microsoft.Office.Interop.Word;
+using Microsoft.Office.Interop.Word;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -33,12 +33,9 @@ namespace SharpSword
 
         }
 
-
-        static void Main(string[] args)
+        static void PrintHelpMenu()
         {
-            if (args.Length == 0)
-            {
-                Console.WriteLine(@"
+        Console.WriteLine(@"
 
  _____ _                      _____                       _ 
 /  ___| |                    /  ___|                     | |
@@ -54,11 +51,17 @@ namespace SharpSword
 "Description: Read Contents of Word Documents using MS Office Interop.\n\n" +
 "Usage: SharpSword.exe C:\\Some\\Path\\To\\Document.(doc/docm/docx/etc...) [-checkPassword] -[password <password>]\n" +
 "Examples:\n" +
-"   -SharpSword.exe test.doc : read the contents of a word doc\n" +
-"   -SharpSword.exe test.doc -checkPassword : checks if the document is password protected\n" +
+"   -SharpSword.exe test.doc                          : read the contents of a word doc\n" +
+"   -SharpSword.exe test.doc -checkPassword           : checks if the document is password protected\n" +
 "   -SharpSword.exe test.doc -password <somepassword> : decrypts the password protected document and reads contents");
-                System.Environment.Exit(0);
+        }
 
+        static void Main(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                PrintHelpMenu();
+                return;
             }
 
             string docFullPath = Path.GetFullPath(args[0]);
@@ -68,22 +71,30 @@ namespace SharpSword
 
             for (int i = 1; i < args.Length; i++)
             {
-                if (args[i] == "-checkPassword")
+                if (string.Equals(args[i], "-checkPassword", StringComparison.OrdinalIgnoreCase))
                 {
                     checkPassword = true;
                 }
-                else if (args[i] == "-password" && i + 1 < args.Length)
+                else if (string.Equals(args[i], "-password", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
                 {
                     documentPassword = args[i + 1];
+                    i++;
                 }
             }
 
 
-            if (File.Exists(docFullPath) && Path.GetExtension(docFullPath).Contains("doc"))
+            if (!File.Exists(docFullPath) || !Path.GetExtension(docFullPath).Contains("doc"))
+            {
+                Console.WriteLine("File Does Not Exist Or File Extension is Not an MSWord Doc");
+                return;
+            }
+
+            Application wordApp = null;
+            Document doc = null;
+
+            try
             {
                 bool isWordRunning = IsProcessRunning("winword");
-                Application wordApp = null;
-                Document doc = null;
                 bool isWordOpen = false;
                 bool isDocOpen = false;
                 bool isPWprotected = false;
@@ -92,6 +103,10 @@ namespace SharpSword
                 {
                     Console.WriteLine("OPSEC WARNING: Microsoft Word is currently running...Using existing Winword Application\n");
                     wordApp = (Application)Marshal.GetActiveObject("Word.Application");
+                    if (wordApp == null)
+                    {
+                        throw new Exception("Failed to get active Word application");
+                    }
                     wordApp.DisplayAlerts = WdAlertLevel.wdAlertsNone;
                     isWordOpen = true;
                 }
@@ -99,11 +114,14 @@ namespace SharpSword
                 {
                     Console.WriteLine("Microsoft Word is not running...Using New COM Winword Application. \n");
                     wordApp = new Application();
+                    if (wordApp == null)
+                    {
+                        throw new Exception("Failed to create new Word application");
+                    }
                     wordApp.Visible = false;
                     wordApp.DisplayAlerts = WdAlertLevel.wdAlertsNone;
                     isWordOpen = false;
                 }
-
 
                 try
                 {
@@ -119,7 +137,9 @@ namespace SharpSword
                                 {
                                     Console.WriteLine($"OPSEC WARNING: Document '{docName}' is already open by user...\n" +
                                         $"By default, this check will always pass as document is unprotected.\n" +
-                                        $"Run this command again when the document is no longer opened by the user.");
+                                        $"Run this command again when the document is no longer opened by the user.\n\n" +
+                                        $"!!YOU CAN READ THIS DOCUMENT WITHOUT USING A PASSWORD BECUASE ITS ALREADY OPEN!!\n" +
+                                        $"Run SharpSword on '{docName}' without any additional arguments");
                                     isDocOpen = true;
                                     doc = docs;
                                 }
@@ -261,12 +281,14 @@ namespace SharpSword
 
                 }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("File Does Not Exist Or File Extention is Not an MSWord Doc");
-
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
             }
         }
     }
 }
-
